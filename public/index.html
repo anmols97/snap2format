@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .format-selector {
+            margin-bottom: 20px;
+        }
+
+        .format-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .format-selector select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .format-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .convert-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .convert-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .convert-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .progress-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #f0f8f0;
+            border-radius: 8px;
+            border: 1px solid #d4edda;
+        }
+
+        .result.error {
+            background: #fdf2f2;
+            border-color: #fecaca;
+        }
+
+        .download-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin-top: 12px;
+            transition: background 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background: #218838;
+        }
+
+        .file-info {
+            display: none;
+            margin: 16px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .file-info strong {
+            color: #333;
+        }
+
+        .supported-formats {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .supported-formats h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .formats-list {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>File Converter</h1>
+
+        <form id="convertForm" enctype="multipart/form-data">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">
+                    <strong>Click to select a file</strong> or drag and drop
+                </div>
+                <div style="font-size: 12px; color: #999;">
+                    Supported: PDF, PNG, JPG, JPEG, GIF, BMP, WEBP (Max 10MB)
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf,.png,.jpg,.jpeg,.gif,.bmp,.webp">
+            </div>
+
+            <div class="file-info" id="fileInfo">
+                <strong>Selected:</strong> <span id="fileName"></span><br>
+                <strong>Size:</strong> <span id="fileSize"></span>
+            </div>
+
+            <div class="format-selector">
+                <label for="formatSelect">Convert to:</label>
+                <select id="formatSelect" required>
+                    <option value="">Select output format</option>
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPG</option>
+                </select>
+            </div>
+
+            <button type="submit" class="convert-btn" id="convertBtn" disabled>
+                Convert File
+            </button>
+        </form>
+
+        <div class="progress" id="progress">
+            <div class="progress-spinner"></div>
+            <div>Converting your file...</div>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="supported-formats">
+            <h3>Supported Conversions</h3>
+            <div class="formats-list">
+                PDF → PNG, JPG<br>
+                PNG → JPG<br>
+                JPG → PNG<br>
+                WEBP → PNG, JPG
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class FileConverter {
+            constructor() {
+                this.uploadArea = document.getElementById('uploadArea');
+                this.fileInput = document.getElementById('fileInput');
+                this.fileInfo = document.getElementById('fileInfo');
+                this.fileName = document.getElementById('fileName');
+                this.fileSize = document.getElementById('fileSize');
+                this.formatSelect = document.getElementById('formatSelect');
+                this.convertBtn = document.getElementById('convertBtn');
+                this.convertForm = document.getElementById('convertForm');
+                this.progress = document.getElementById('progress');
+                this.result = document.getElementById('result');
+
+                this.selectedFile = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Upload area click
+                this.uploadArea.addEventListener('click', () => {
+                    this.fileInput.click();
+                });
+
+                // File input change
+                this.fileInput.addEventListener('change', (e) => {
+                    this.handleFileSelect(e.target.files[0]);
+                });
+
+                // Drag and drop
+                this.uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.add('dragover');
+                });
+
+                this.uploadArea.addEventListener('dragleave', () => {
+                    this.uploadArea.classList.remove('dragover');
+                });
+
+                this.uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.remove('dragover');
+                    this.handleFileSelect(e.dataTransfer.files[0]);
+                });
+
+                // Format selection change
+                this.formatSelect.addEventListener('change', () => {
+                    this.updateConvertButton();
+                });
+
+                // Form submission
+                this.convertForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.convertFile();
+                });
+            }
+
+            handleFileSelect(file) {
+                if (!file) return;
+
+                if (!this.isFileTypeSupported(file)) {
+                    this.showError('File type not supported. Please select a PDF, PNG, JPG, GIF, BMP, or WEBP file.');
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    this.showError('File too large. Maximum size is 10MB.');
+                    return;
+                }
+
+                this.selectedFile = file;
+                this.fileName.textContent = file.name;
+                this.fileSize.textContent = this.formatFileSize(file.size);
+                this.fileInfo.style.display = 'block';
+
+                this.updateFormatOptions(file);
+                this.updateConvertButton();
+                this.hideResult();
+            }
+
+            isFileTypeSupported(file) {
+                const supportedTypes = [
+                    'application/pdf',
+                    'image/png',
+                    'image/jpeg',
+                    'image/gif',
+                    'image/bmp',
+                    'image/webp'
+                ];
+                return supportedTypes.includes(file.type);
+            }
+
+            updateFormatOptions(file) {
+                const fileType = file.type;
+                const formatSelect = this.formatSelect;
+
+                // Clear existing options except the first one
+                formatSelect.innerHTML = '<option value="">Select output format</option>';
+
+                if (fileType === 'application/pdf') {
+                    formatSelect.innerHTML += '<option value="png">PNG</option>';
+                    formatSelect.innerHTML += '<option value="jpg">JPG</option>';
+                } else if (fileType.startsWith('image/')) {
+                    const currentFormat = fileType.split('/')[1];
+                    if (currentFormat !== 'png') {
+                        formatSelect.innerHTML += '<option value="png">PNG</option>';
+                    }
+                    if (currentFormat !== 'jpeg' && currentFormat !== 'jpg') {
+                        formatSelect.innerHTML += '<option value="jpg">JPG</option>';
+                    }
+                }
+            }
+
+            updateConvertButton() {
+                const hasFile = this.selectedFile !== null;
+                const hasFormat = this.formatSelect.value !== '';
+
+                this.convertBtn.disabled = !(hasFile && hasFormat);
+            }
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            async convertFile() {
+                if (!this.selectedFile || !this.formatSelect.value) return;
+
+                this.showProgress();
+
+                const formData = new FormData();
+                formData.append('file', this.selectedFile);
+                formData.append('format', this.formatSelect.value);
+
+                try {
+                    const response = await fetch('/convert', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        this.showSuccess(result);
+                    } else {
+                        this.showError(result.error || 'Conversion failed');
+                    }
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    this.showError('Network error. Please try again.');
+                } finally {
+                    this.hideProgress();
+                }
+            }
+
+            showProgress() {
+                this.progress.style.display = 'block';
+                this.convertBtn.disabled = true;
+                this.hideResult();
+            }
+
+            hideProgress() {
+                this.progress.style.display = 'none';
+                this.updateConvertButton();
+            }
+
+            showSuccess(result) {
+                this.result.className = 'result';
+                this.result.innerHTML = `
+                    <div style="color: #155724; margin-bottom: 12px;">
+                        <strong>✅ Conversion successful!</strong>
+                    </div>
+                    <div style="font-size: 14px; color: #666; margin-bottom: 12px;">
+                        ${result.originalName} → ${result.convertedName}
+                    </div>
+                    <a href="${result.downloadUrl}" class="download-btn" download>
+                        Download Converted File
+                    </a>
+                `;
+                this.result.style.display = 'block';
+            }
+
+            showError(message) {
+                this.result.className = 'result error';
+                this.result.innerHTML = `
+                    <div style="color: #721c24;">
+                        <strong>❌ Error:</strong> ${message}
+                    </div>
+                `;
+                this.result.style.display = 'block';
+            }
+
+            hideResult() {
+                this.result.style.display = 'none';
+            }
+        }
+
+        // Initialize the file converter when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new FileConverter();
+        });
+    </script>
+</body>
+
+</html>
