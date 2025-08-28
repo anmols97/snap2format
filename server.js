@@ -1,3 +1,4 @@
+// File converter web server - handles file uploads and conversions
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -13,6 +14,7 @@ app.use(express.static("public"));
 app.use(express.json());
 
 // File upload configuration
+// Configure file storage with unique filenames
 const storage = multer.diskStorage({
 	destination: "./uploads/",
 	filename: (req, file, cb) => {
@@ -24,6 +26,7 @@ const storage = multer.diskStorage({
 const upload = multer({
 	storage,
 	limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+	// Validate file types - only allow images and PDFs
 	fileFilter: (req, file, cb) => {
 		const allowedTypes = /pdf|png|jpg|jpeg|gif|bmp|webp/;
 		const extname = allowedTypes.test(
@@ -42,7 +45,7 @@ const upload = multer({
 const converter = new FileConverter();
 const cleanup = new FileCleanup();
 
-// Ensure directories exist
+// Initialize app directories and cleanup job
 async function initializeApp() {
 	try {
 		await fs.mkdir("./uploads", { recursive: true });
@@ -58,10 +61,12 @@ async function initializeApp() {
 }
 
 // Routes
+// Serve main page
 app.get("/", (req, res) => {
 	res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Handle file upload and conversion
 app.post("/convert", upload.single("file"), async (req, res) => {
 	try {
 		if (!req.file) {
@@ -94,6 +99,7 @@ app.post("/convert", upload.single("file"), async (req, res) => {
 	}
 });
 
+// Handle file downloads
 app.get("/download/:filename", async (req, res) => {
 	try {
 		const filename = req.params.filename;
