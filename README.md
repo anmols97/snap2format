@@ -15,7 +15,7 @@ A fast and simple web-based file converter that transforms your files between di
 
 - PDF → PNG, JPG
 - PNG → JPG
-- JPG → PNG  
+- JPG → PNG
 - WEBP → PNG, JPG
 
 ## Quick Start
@@ -28,17 +28,20 @@ A fast and simple web-based file converter that transforms your files between di
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/anmols97/snap2format.git
 cd snap2format
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the server:
+
 ```bash
 npm start
 ```
@@ -48,9 +51,24 @@ npm start
 ### Development
 
 To run in development mode with auto-restart:
+
 ```bash
 npm run dev
 ```
+
+## Screenshots
+
+### Main Interface
+
+![Main Interface](screenshots/main-interface.png)
+
+### File Upload
+
+![File Upload](screenshots/file-upload.png)
+
+### Download Ready
+
+![Download Ready](screenshots/download-ready.png)
 
 ## Usage
 
